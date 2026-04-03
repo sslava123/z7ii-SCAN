@@ -1,1 +1,514 @@
-cat ~/Desktop/z7ii-scan.html | pbcopy && echo "Ready"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Z7 Scan">
+<meta name="theme-color" content="#0e0c0a">
+<title>Z7 II Scan Assistant</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#f0ede8;font-family:'Courier New',monospace;min-height:100vh;overscroll-behavior:none}
+.header{background:#0e0c0a;padding:52px 18px 14px;position:sticky;top:0;z-index:10}
+.header h1{color:#f0ede8;font-size:21px;font-weight:900;text-transform:uppercase}
+.header p{color:#7a7268;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin-top:3px}
+.tabs{display:flex;border-bottom:2px solid #0e0c0a;background:#f0ede8;position:sticky;top:82px;z-index:9}
+.tab{flex:1;padding:12px 0;font-family:'Courier New',monospace;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:none;border:none;border-right:1px solid #0e0c0a;color:#7a7268;cursor:pointer}
+.tab:last-child{border-right:none}
+.tab.active{background:#0e0c0a;color:#f0ede8}
+.content{padding:18px}
+.sec{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#9a9288;margin:20px 0 10px;display:block}
+.sec:first-child{margin-top:0}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{font-family:'Courier New',monospace;font-size:14px;padding:9px 13px;border-radius:3px;border:1.5px solid #c8c4bc;background:#fff;color:#3e3a34;cursor:pointer}
+.pill.on-dark{background:#0e0c0a;border-color:#0e0c0a;color:#fff}
+.pill.on-green{background:#2a6e3a;border-color:#2a6e3a;color:#fff}
+.pill.on-blue{background:#1a5eb8;border-color:#1a5eb8;color:#fff}
+.toggles{display:flex;gap:10px;flex-wrap:wrap}
+.tog{font-family:'Courier New',monospace;font-size:14px;padding:11px 14px;border-radius:3px;border:1.5px solid #c8c4bc;background:#fff;color:#6a6258;cursor:pointer;display:flex;align-items:center;gap:8px}
+.tog.on{background:#0e0c0a;border-color:#0e0c0a;color:#f0ede8}
+.go{width:100%;margin-top:20px;padding:16px;background:#0e0c0a;color:#f0ede8;font-family:'Courier New',monospace;font-size:16px;font-weight:700;text-transform:uppercase;border:none;border-radius:3px;cursor:pointer}
+.go:disabled{background:#c8c4bc}
+.scan-btn{width:100%;padding:16px;background:#1a5eb8;color:#fff;font-family:'Courier New',monospace;font-size:16px;font-weight:700;text-transform:uppercase;border:none;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
+.scan-btn:disabled{background:#c8c4bc}
+.scan-divider{display:flex;align-items:center;gap:10px;margin:16px 0}
+.scan-divider span{font-size:11px;color:#9a9288;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.scan-divider::before,.scan-divider::after{content:'';flex:1;height:1px;background:#ccc8c0}
+.scan-result{border:1.5px solid #1a5eb8;border-radius:3px;padding:14px;margin-bottom:16px;display:none;line-height:1.7}
+.scan-result.show{display:block}
+.scan-result .s-head{font-size:15px;font-weight:700;color:#0e0c0a;margin-bottom:6px}
+.scan-result .s-row{display:flex;gap:10px;font-size:13px;padding:2px 0}
+.scan-result .s-key{color:#9a9288;flex-shrink:0;width:80px;font-size:11px;text-transform:uppercase;font-weight:700;padding-top:1px}
+.scan-result .s-val{color:#1e1c1a}
+.scan-result .s-note{font-size:11px;color:#9a9288;margin-top:8px;font-style:italic;border-top:1px solid #e8e4de;padding-top:6px}
+.scan-result.err{background:#fce8e8;border-color:#b81a1a}
+.scan-result.err .s-head{color:#b81a1a}
+video{display:none}canvas{display:none}
+.card{background:#fff;border:1.5px solid #0e0c0a;border-radius:0 4px 4px 0;padding:18px;margin-bottom:14px;box-shadow:3px 3px 0 #0e0c0a18}
+.use-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.use-lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.use-val{font-size:44px;font-weight:900;text-transform:uppercase;line-height:1}
+.use-sub{font-size:15px;color:#7a7268}
+.row{display:flex;gap:12px;border-top:1px solid #e8e4de;padding-top:10px;margin-top:2px}
+.rkey{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9a9288;flex-shrink:0;width:52px;padding-top:2px}
+.rval{font-size:15px;color:#1e1c1a;line-height:1.5}
+.reminder{background:#f8f6f2;border:1px solid #ccc8c0;border-radius:3px;padding:14px;margin-bottom:14px}
+.rem-title{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9a9288;margin-bottom:10px}
+.prow{display:flex;gap:10px;padding:3px 0}
+.pkey{font-size:11px;font-weight:700;text-transform:uppercase;color:#aaa8a0;flex-shrink:0;width:88px}
+.pval{font-size:14px;color:#3a3830}
+.back{width:100%;padding:14px;background:#fff;border:1.5px solid #0e0c0a;border-radius:3px;font-family:'Courier New',monospace;font-size:15px;color:#0e0c0a;cursor:pointer}
+.pblock{border:1.5px solid #0e0c0a;border-radius:0 4px 4px 0;margin-bottom:10px;background:#fff;overflow:hidden}
+.phead{display:flex;align-items:center;gap:10px;padding:13px 16px;background:none;border:none;cursor:pointer;width:100%;font-family:'Courier New',monospace}
+.pdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.pid{font-size:20px;font-weight:900;text-transform:uppercase;color:#0e0c0a}
+.plbl{font-size:13px;color:#7a7268}
+.parr{margin-left:auto;font-size:14px;color:#9a9288}
+.pbody{padding:0 16px 14px;border-top:1px solid #e8e4de;display:none}
+.pbody.open{display:block}
+.srow{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #f0ede8}
+.skey{font-size:11px;font-weight:700;text-transform:uppercase;color:#9a9288;flex-shrink:0;width:100px}
+.sval{font-size:14px;color:#1e1c1a}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Z7 II Field Assistant</h1>
+  <p>Nikon Z7 II · SB-700 · Sicily 2026</p>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="showTab('query')">Query</button>
+  <button class="tab" onclick="showTab('presets')">U1 / U2 / U3</button>
+</div>
+
+<div id="tab-query" class="content">
+  <div id="form-view">
+
+    <button class="scan-btn" id="scan-btn" onclick="startScan()">⬡ Scan Scene</button>
+    <div class="scan-result" id="scan-result"></div>
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+
+    <div class="scan-divider"><span>or select manually</span></div>
+
+    <span class="sec">Scene</span>
+    <div class="pills" id="scene-pills">
+      <button class="pill" onclick="pick('scene',this)">Architecture / facades</button>
+      <button class="pill" onclick="pick('scene',this)">Landscape / coast</button>
+      <button class="pill" onclick="pick('scene',this)">Street</button>
+      <button class="pill" onclick="pick('scene',this)">People / portraits</button>
+      <button class="pill" onclick="pick('scene',this)">Church / interior</button>
+      <button class="pill" onclick="pick('scene',this)">Restaurant / party</button>
+      <button class="pill" onclick="pick('scene',this)">Evening / night</button>
+    </div>
+    <span class="sec">Light</span>
+    <div class="pills" id="light-pills">
+      <button class="pill" onclick="pick('light',this)">Bright sun / midday</button>
+      <button class="pill" onclick="pick('light',this)">Golden hour</button>
+      <button class="pill" onclick="pick('light',this)">Overcast / flat</button>
+      <button class="pill" onclick="pick('light',this)">Open shade</button>
+      <button class="pill" onclick="pick('light',this)">Mixed / indoor</button>
+      <button class="pill" onclick="pick('light',this)">Dark / candles</button>
+    </div>
+    <span class="sec">Lens on body</span>
+    <div class="pills" id="lens-pills">
+      <button class="pill" onclick="pick('lens',this)">AF-S 16-35mm f/4 (FTZ)</button>
+      <button class="pill" onclick="pick('lens',this)">24-70mm f/2.8</button>
+      <button class="pill" onclick="pick('lens',this)">50mm f/1.8</button>
+      <button class="pill" onclick="pick('lens',this)">70-200mm f/2.8</button>
+    </div>
+    <span class="sec">Equipment</span>
+    <div class="toggles">
+      <button class="tog" id="tog-tripod" onclick="tog('tripod')">○ Tripod</button>
+      <button class="tog" id="tog-flash" onclick="tog('flash')">○ SB-700</button>
+    </div>
+    <button class="go" id="go-btn" onclick="getResult()" disabled>Get Settings →</button>
+  </div>
+
+  <div id="result-view" class="hidden">
+    <div class="card" id="result-card"></div>
+    <div class="reminder" id="reminder"></div>
+    <button class="back" onclick="goBack()">← New query</button>
+  </div>
+</div>
+
+<div id="tab-presets" class="content hidden">
+  <div class="pblock" style="border-left:4px solid #b87c1a">
+    <button class="phead" onclick="toggleP('u1')">
+      <div class="pdot" style="background:#b87c1a"></div>
+      <span class="pid">U1</span><span class="plbl">Architecture &amp; Landscape</span>
+      <span class="parr" id="arr-u1">▼</span>
+    </button>
+    <div class="pbody" id="body-u1">
+      <div class="srow"><span class="skey">Mode</span><span class="sval">Aperture Priority (A)</span></div>
+      <div class="srow"><span class="skey">Aperture</span><span class="sval">f/8 default</span></div>
+      <div class="srow"><span class="skey">ISO</span><span class="sval">Auto · 64–6400</span></div>
+      <div class="srow"><span class="skey">Min shutter</span><span class="sval">Auto — 1/30s floor for 16-35mm</span></div>
+      <div class="srow"><span class="skey">VR</span><span class="sval">Normal — Off on tripod + lens barrel</span></div>
+      <div class="srow"><span class="skey">AF Mode</span><span class="sval">AF-S</span></div>
+      <div class="srow"><span class="skey">AF Area</span><span class="sval">Wide-area AF (S)</span></div>
+      <div class="srow"><span class="skey">Release</span><span class="sval">Single frame</span></div>
+      <div class="srow"><span class="skey">WB</span><span class="sval">Direct sunlight</span></div>
+      <div class="srow"><span class="skey">Pic Control</span><span class="sval">Standard</span></div>
+      <div class="srow"><span class="skey">ADL</span><span class="sval">Normal</span></div>
+      <div class="srow"><span class="skey">Metering</span><span class="sval">Matrix</span></div>
+    </div>
+  </div>
+  <div class="pblock" style="border-left:4px solid #1a5eb8">
+    <button class="phead" onclick="toggleP('u2')">
+      <div class="pdot" style="background:#1a5eb8"></div>
+      <span class="pid">U2</span><span class="plbl">Street &amp; People</span>
+      <span class="parr" id="arr-u2">▼</span>
+    </button>
+    <div class="pbody" id="body-u2">
+      <div class="srow"><span class="skey">Mode</span><span class="sval">Program (P)</span></div>
+      <div class="srow"><span class="skey">ISO</span><span class="sval">Auto · 64–6400</span></div>
+      <div class="srow"><span class="skey">Min shutter</span><span class="sval">1/250s</span></div>
+      <div class="srow"><span class="skey">VR</span><span class="sval">Normal</span></div>
+      <div class="srow"><span class="skey">AF Mode</span><span class="sval">AF-C</span></div>
+      <div class="srow"><span class="skey">AF Area</span><span class="sval">Auto-area AF (people)</span></div>
+      <div class="srow"><span class="skey">Release</span><span class="sval">Single frame</span></div>
+      <div class="srow"><span class="skey">WB</span><span class="sval">Auto (keep warm)</span></div>
+      <div class="srow"><span class="skey">Pic Control</span><span class="sval">Portrait</span></div>
+      <div class="srow"><span class="skey">ADL</span><span class="sval">High</span></div>
+      <div class="srow"><span class="skey">Metering</span><span class="sval">Matrix</span></div>
+    </div>
+  </div>
+  <div class="pblock" style="border-left:4px solid #8b1ab8">
+    <button class="phead" onclick="toggleP('u3')">
+      <div class="pdot" style="background:#8b1ab8"></div>
+      <span class="pid">U3</span><span class="plbl">Low Light / Interiors</span>
+      <span class="parr" id="arr-u3">▼</span>
+    </button>
+    <div class="pbody" id="body-u3">
+      <div class="srow"><span class="skey">Mode</span><span class="sval">Aperture Priority (A)</span></div>
+      <div class="srow"><span class="skey">Aperture</span><span class="sval">f/1.8–f/2.8</span></div>
+      <div class="srow"><span class="skey">ISO</span><span class="sval">Auto · 64–6400</span></div>
+      <div class="srow"><span class="skey">Min shutter</span><span class="sval">1/60s</span></div>
+      <div class="srow"><span class="skey">VR</span><span class="sval">Normal</span></div>
+      <div class="srow"><span class="skey">AF Mode</span><span class="sval">AF-S</span></div>
+      <div class="srow"><span class="skey">AF Area</span><span class="sval">Auto-area AF</span></div>
+      <div class="srow"><span class="skey">Release</span><span class="sval">Single frame</span></div>
+      <div class="srow"><span class="skey">WB</span><span class="sval">Auto (keep warm)</span></div>
+      <div class="srow"><span class="skey">Pic Control</span><span class="sval">Standard</span></div>
+      <div class="srow"><span class="skey">ADL</span><span class="sval">Normal</span></div>
+      <div class="srow"><span class="skey">Metering</span><span class="sval">Matrix</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var S={scene:'',light:'',lens:'',tripod:false,flash:false};
+var stream=null;
+
+var PRESETS={
+  U1:{label:'Architecture & Landscape',color:'#b87c1a',settings:[
+    ['Mode','Aperture Priority (A)'],['Aperture','f/8'],['ISO','Auto 64-6400'],
+    ['Min shutter','Auto (1/focal length)'],['VR','Normal - Off on tripod + lens barrel'],
+    ['AF Mode','AF-S'],['AF Area','Wide-area AF (S)'],['Release','Single frame'],
+    ['WB','Direct sunlight'],['Pic Control','Standard'],['ADL','Normal'],['Metering','Matrix']]},
+  U2:{label:'Street & People',color:'#1a5eb8',settings:[
+    ['Mode','Program (P)'],['ISO','Auto 64-6400'],['Min shutter','1/250s'],
+    ['VR','Normal'],['AF Mode','AF-C'],['AF Area','Auto-area AF (people)'],
+    ['Release','Single frame'],['WB','Auto (keep warm)'],['Pic Control','Portrait'],
+    ['ADL','High'],['Metering','Matrix']]},
+  U3:{label:'Low Light / Interiors',color:'#8b1ab8',settings:[
+    ['Mode','Aperture Priority (A)'],['Aperture','f/1.8-f/2.8'],['ISO','Auto 64-6400'],
+    ['Min shutter','1/60s'],['VR','Normal'],['AF Mode','AF-S'],['AF Area','Auto-area AF'],
+    ['Release','Single frame'],['WB','Auto (keep warm)'],['Pic Control','Standard'],
+    ['ADL','Normal'],['Metering','Matrix']]}
+};
+
+// ---- SCAN LOGIC WITH Z7 II CORRECTION FACTORS ----
+function startScan(){
+  var btn=document.getElementById('scan-btn');
+  btn.textContent='Scanning...';
+  btn.disabled=true;
+
+  navigator.mediaDevices.getUserMedia({
+    video:{facingMode:'environment',width:{ideal:640},height:{ideal:480}}
+  }).then(function(s){
+    stream=s;
+    var video=document.getElementById('video');
+    video.srcObject=s;
+    video.onloadedmetadata=function(){
+      video.play();
+      // Wait 1.2s for auto-exposure to settle
+      setTimeout(function(){captureAndAnalyse(video);},1200);
+    };
+  }).catch(function(){
+    btn.textContent='⬡ Scan Scene';
+    btn.disabled=false;
+    showErr('Camera access denied. Go to Settings > Safari > Camera and allow access.');
+  });
+}
+
+function captureAndAnalyse(video){
+  var canvas=document.getElementById('canvas');
+  var W=video.videoWidth||640;
+  var H=video.videoHeight||480;
+  canvas.width=W; canvas.height=H;
+  var ctx=canvas.getContext('2d');
+  ctx.drawImage(video,0,0,W,H);
+
+  if(stream){stream.getTracks().forEach(function(t){t.stop();});stream=null;}
+
+  var data=ctx.getImageData(0,0,W,H).data;
+
+  // Sample pixels — skip edges (often overexposed sky or dark borders)
+  var margin=Math.floor(W*0.15);
+  var r=0,g=0,b=0,n=0;
+  var brightPx=0,darkPx=0,total=0;
+
+  for(var y=Math.floor(H*0.1);y<H*0.9;y+=4){
+    for(var x=margin;x<W-margin;x+=4){
+      var i=(y*W+x)*4;
+      var ri=data[i],gi=data[i+1],bi=data[i+2];
+      var lum=ri*0.299+gi*0.587+bi*0.114;
+      r+=ri; g+=gi; b+=bi; n++;
+      total++;
+      if(lum>210) brightPx++;  // blown highlights
+      if(lum<40)  darkPx++;    // crushed shadows
+    }
+  }
+  r=r/n; g=g/n; b=b/n;
+
+  // Raw iPhone readings
+  var rawBrightness = r*0.299 + g*0.587 + b*0.114;
+  var rawWarmth     = r/(b+1);
+  var highlightRatio= brightPx/total;
+  var shadowRatio   = darkPx/total;
+  var rawContrast   = highlightRatio + shadowRatio;
+
+  // ---- Z7 II CORRECTION FACTORS ----
+  // iPhone auto-exposes, boosting dark scenes and compressing bright ones
+  // We reverse this to estimate what the Z7 II will actually see
+
+  // Brightness correction: iPhone lifts darks ~+40 and compresses brights
+  // Apply inverse S-curve approximation
+  var corrBrightness;
+  if(rawBrightness < 80){
+    corrBrightness = rawBrightness * 0.6;   // dark scenes are much darker in reality
+  } else if(rawBrightness > 180){
+    corrBrightness = rawBrightness * 1.15;  // bright scenes are even brighter
+  } else {
+    corrBrightness = rawBrightness * 0.85;  // midtones slightly darker
+  }
+
+  // Warmth correction: iPhone neutralises warm casts by ~30%
+  var corrWarmth = rawWarmth * 1.35;
+
+  // Contrast correction: iPhone HDR compresses contrast by ~40%
+  var corrContrast = rawContrast * 1.6;
+
+  // Time of day from device clock
+  var hour = new Date().getHours();
+  var isGoldenMorning = hour>=6  && hour<=8;
+  var isGoldenEvening = hour>=17 && hour<=20;
+  var isGolden        = isGoldenMorning || isGoldenEvening;
+  var isMidday        = hour>=11 && hour<=14;
+  var isNight         = hour>=21 || hour<=5;
+
+  // ---- CLASSIFY ----
+  var lightGuess, reasons=[];
+
+  if(isNight || corrBrightness < 20){
+    lightGuess='Dark / candles';
+    reasons.push('Very low light');
+    if(isNight) reasons.push('Night hours ('+hour+':00)');
+  } else if(corrBrightness < 55){
+    lightGuess='Mixed / indoor';
+    reasons.push('Low ambient — likely indoor');
+  } else if(isGolden && corrWarmth > 1.55){
+    lightGuess='Golden hour';
+    reasons.push((isGoldenMorning?'Morning':'Evening')+' golden hour ('+hour+':00)');
+    reasons.push('Strong warm cast detected');
+  } else if(corrBrightness > 155 && corrContrast > 0.28 && isMidday){
+    lightGuess='Bright sun / midday';
+    reasons.push('High brightness + hard contrast + midday hour');
+  } else if(corrBrightness > 140 && corrContrast > 0.22){
+    lightGuess='Bright sun / midday';
+    reasons.push('High brightness + significant contrast');
+  } else if(corrBrightness > 120 && corrContrast < 0.12){
+    lightGuess='Overcast / flat';
+    reasons.push('Bright but low contrast — diffuse sky');
+  } else if(corrBrightness > 80 && corrWarmth > 1.45 && !isGolden){
+    lightGuess='Open shade';
+    reasons.push('Medium brightness, warm reflected light');
+  } else if(isGolden && corrWarmth > 1.3){
+    lightGuess='Golden hour';
+    reasons.push('Time of day ('+hour+':00) + warm cast');
+  } else if(corrBrightness > 70){
+    lightGuess='Overcast / flat';
+    reasons.push('Moderate even light');
+  } else {
+    lightGuess='Mixed / indoor';
+    reasons.push('Ambiguous — check manually');
+  }
+
+  // Confidence estimate
+  var confidence = 'Good';
+  if(reasons.length===1 && reasons[0].includes('Ambiguous')) confidence='Low — verify manually';
+  else if(corrContrast>0.35) confidence='High';
+  else if(corrBrightness<40||corrBrightness>200) confidence='High';
+
+  // Auto-select pill
+  selectPill('light', lightGuess);
+
+  // Build result display
+  var el=document.getElementById('scan-result');
+  el.className='scan-result show';
+  el.style.background='#e8f0fc';
+  el.innerHTML=
+    '<div class="s-head">Detected: '+lightGuess+'</div>'+
+    '<div class="s-row"><span class="s-key">Evidence</span><span class="s-val">'+reasons.join(' · ')+'</span></div>'+
+    '<div class="s-row"><span class="s-key">Brightness</span><span class="s-val">'+Math.round(corrBrightness)+'/255 (corrected from iPhone '+Math.round(rawBrightness)+')</span></div>'+
+    '<div class="s-row"><span class="s-key">Warmth</span><span class="s-val">'+corrWarmth.toFixed(2)+' (corrected from '+rawWarmth.toFixed(2)+')</span></div>'+
+    '<div class="s-row"><span class="s-key">Contrast</span><span class="s-val">'+corrContrast.toFixed(2)+' (corrected from '+rawContrast.toFixed(2)+')</span></div>'+
+    '<div class="s-row"><span class="s-key">Confidence</span><span class="s-val">'+confidence+'</span></div>'+
+    '<div class="s-note">Light pre-selected below. Adjust if needed, then pick Scene + Lens and tap Get Settings.</div>';
+
+  var btn=document.getElementById('scan-btn');
+  btn.textContent='⬡ Scan Again';
+  btn.disabled=false;
+  document.getElementById('go-btn').disabled=!(S.scene||S.light);
+}
+
+function showErr(msg){
+  var el=document.getElementById('scan-result');
+  el.className='scan-result show err';
+  el.innerHTML='<div class="s-head">Camera error</div><div class="s-row"><span class="s-val">'+msg+'</span></div>';
+}
+
+function selectPill(type,value){
+  var map={scene:'on-dark',light:'on-green',lens:'on-blue'};
+  document.getElementById(type+'-pills').querySelectorAll('.pill').forEach(function(p){
+    p.classList.remove('on-dark','on-green','on-blue');
+    if(p.textContent===value){p.classList.add(map[type]);S[type]=value;}
+  });
+}
+
+// ---- MANUAL ----
+function pick(type,btn){
+  var map={scene:'on-dark',light:'on-green',lens:'on-blue'};
+  document.getElementById(type+'-pills').querySelectorAll('.pill').forEach(function(p){p.classList.remove('on-dark','on-green','on-blue');});
+  if(S[type]===btn.textContent){S[type]='';}
+  else{btn.classList.add(map[type]);S[type]=btn.textContent;}
+  document.getElementById('go-btn').disabled=!(S.scene||S.light);
+}
+
+function tog(t){
+  S[t]=!S[t];
+  var btn=document.getElementById('tog-'+t);
+  btn.classList.toggle('on',S[t]);
+  btn.textContent=(S[t]?'✓ ':'○ ')+(t==='tripod'?'Tripod':'SB-700');
+}
+
+// ---- RECOMMEND ----
+function recommend(){
+  var s=(S.scene+' '+S.light).toLowerCase();
+  var isLow=/church|interior|evening|night|dark|candle|indoor|mixed|restaurant|party/.test(s);
+  var isLand=/landscape|coast/.test(s);
+  var isArch=/architecture|facade/.test(s);
+  var isPeople=/street|people|portrait|restaurant|party/.test(s);
+  var isHarsh=/bright sun|midday/.test(s);
+  var isGolden=/golden/.test(s);
+  var isOver=/overcast|flat|shade/.test(s);
+  var is1635=S.lens.includes('16-35');
+  var preset,tweak=null,lensRec,flashCall,note=null;
+
+  if(isLow){
+    preset='U3';
+    lensRec='50mm f/1.8 — primary choice';
+    tweak='Start at f/2 · 1/60s floor · +0.3-0.7 EV (camera underexposes dark)';
+    flashCall=S.flash?'Bounce off ceiling: TTL -1.5EV · point head straight up':'Off — preserve atmosphere';
+    note=(S.scene.includes('restaurant')||S.scene.includes('party'))
+      ?'Group shots: switch to 24-70mm f/2.8 · place AF point manually'
+      :'If AF hunts: switch to Pinpoint · aim at contrast edge';
+  } else if(isLand||(isArch&&!isPeople)){
+    preset='U1';
+    lensRec=isLand?'24-70mm f/2.8 or AF-S 16-35mm f/4 · 70-200mm for compression':'AF-S 16-35mm f/4 or 24-70mm f/2.8';
+    if(S.tripod) tweak=is1635?'VR off on body AND flip lens barrel VR switch · 2s self-timer':'VR off · 2s self-timer';
+    if(isHarsh) tweak=(tweak?tweak+' · ':'')+'-0.7 EV — white stone blows out fast';
+    if(isGolden){tweak=(tweak?tweak+' · ':'')+'+0.3 EV · switch WB to Shade';}
+    if(isOver) note='Flat light — no comp needed · great for detail';
+    if(is1635&&!S.tripod) note='16-35mm handheld: set min shutter to 1/30s manually';
+    flashCall='Off';
+  } else {
+    preset='U2';
+    lensRec=isPeople?'50mm f/1.8 or 24-70mm f/2.8':'24-70mm f/2.8';
+    if(isHarsh){
+      tweak='-0.7 EV · ADL High already on';
+      flashCall=S.flash?'On: TTL -1.3EV fill — essential for faces in shadow':'Off — shade subjects if possible';
+      note='Keep sun at 45° to subject';
+    } else if(isGolden){
+      tweak='-0.3 EV — preserve warmth';
+      flashCall=S.flash?'On: TTL -1.7EV subtle fill only':'Off';
+    } else if(isOver){
+      flashCall=S.flash?'Optional: TTL -1EV for catchlights':'Off';
+      note='Ideal street light — soft shadows, no squinting';
+    } else {
+      flashCall=S.flash?'Optional: TTL -1EV fill':'Off';
+    }
+  }
+
+  if(S.lens&&!lensRec.startsWith(S.lens.split(' ')[0])){
+    var w=S.lens.includes('70-200')&&preset==='U3'?' — 50mm preferred but usable at f/2.8'
+      :S.lens.includes('16-35')&&isPeople?' — watch distortion on faces at wide end':'';
+    lensRec=S.lens+w;
+  }
+  return{preset:preset,tweak:tweak,lensRec:lensRec,flashCall:flashCall,note:note};
+}
+
+function getResult(){
+  var r=recommend();
+  var p=PRESETS[r.preset];
+  var card=document.getElementById('result-card');
+  card.style.borderLeft='5px solid '+p.color;
+  var rows=[
+    ['Scene',[S.scene,S.light,S.lens].filter(Boolean).join(' · ')],
+    S.tripod?['Tripod','Deployed — VR off (body + lens barrel if 16-35mm) · use self-timer']:null,
+    ['Lens',r.lensRec],
+    r.tweak?['Tweak',r.tweak]:null,
+    ['Flash',r.flashCall],
+    r.note?['Note',r.note]:null
+  ].filter(Boolean);
+  card.innerHTML='<div class="use-row"><span class="use-lbl" style="color:'+p.color+'">USE</span>'
+    +'<span class="use-val">'+r.preset+'</span>'
+    +'<span class="use-sub">'+p.label+'</span></div>'
+    +rows.map(function(row){return'<div class="row"><span class="rkey">'+row[0]+'</span><span class="rval">'+row[1]+'</span></div>';}).join('');
+  var rem=document.getElementById('reminder');
+  rem.innerHTML='<div class="rem-title">'+r.preset+' base settings</div>'
+    +p.settings.map(function(s){return'<div class="prow"><span class="pkey">'+s[0]+'</span><span class="pval">'+s[1]+'</span></div>';}).join('');
+  document.getElementById('form-view').classList.add('hidden');
+  document.getElementById('result-view').classList.remove('hidden');
+}
+
+function goBack(){
+  document.getElementById('result-view').classList.add('hidden');
+  document.getElementById('form-view').classList.remove('hidden');
+}
+
+function showTab(t){
+  document.getElementById('tab-query').classList.toggle('hidden',t!=='query');
+  document.getElementById('tab-presets').classList.toggle('hidden',t!=='presets');
+  document.querySelectorAll('.tab').forEach(function(btn,i){
+    btn.classList.toggle('active',(i===0&&t==='query')||(i===1&&t==='presets'));
+  });
+}
+
+function toggleP(id){
+  var b=document.getElementById('body-'+id);
+  var a=document.getElementById('arr-'+id);
+  b.classList.toggle('open');
+  a.textContent=b.classList.contains('open')?'▲':'▼';
+}
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
+</script>
+</body>
+</html>
